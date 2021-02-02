@@ -13,7 +13,8 @@ void * worker_function(void *tid) {
 int main()
 {
   int i, tid[NUM_THREADS-1];
-  /* this variable is our reference to the second thread */
+
+  /* 'worker_threads' points to all threads other than thread-0 */
   pthread_t worker_threads[NUM_THREADS-1];
   printf("Only thread zero exists at this point\n");
 

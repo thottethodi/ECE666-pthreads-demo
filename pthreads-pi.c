@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <time.h>
 #include <pthread.h>
 
@@ -8,23 +7,24 @@
 //#define DEBUG
 
 #ifdef DEBUG
-#define N 4
+#define N 8
 #define NUM_THREADS 2 
 #endif
 
 #ifndef DEBUG
 #define N (128*1024*1024)
-#define NUM_THREADS 2 
+#define NUM_THREADS 8 
 #endif
 
 int Cin[NUM_THREADS] = {0};
 
+#define TRIALS_PER_THREAD (N/NUM_THREADS)
 
-int trial() {
+int trial(struct drand48_data *rbuf) {
    double x, y, dist;
-   x = drand48();
-   y = drand48();
-   dist = sqrt(x*x+y*y);
+   drand48_r(rbuf, &x);
+   drand48_r(rbuf, &y);
+   dist = x*x+y*y;
 
 #ifdef DEBUG
    printf("Point (%5.3f,%5.3f) is %5.3f away from the origin.\n", x, y, dist);
@@ -36,8 +36,11 @@ int trial() {
 
 void * worker_function(void *tid) {
    int i,local_sum=0;
-   for(i=0; i<(N/NUM_THREADS); i++) {
-     local_sum += trial();
+   int bound = TRIALS_PER_THREAD;
+   struct drand48_data rbuf;
+   srand48_r(time(NULL) + (*(int *)tid), &rbuf); // private randomize seed
+   for(i=0; i<bound; i++) {
+     local_sum += trial(&rbuf);
    };
    Cin[*(int *) tid] += local_sum;
 }
@@ -48,10 +51,11 @@ int main() {
    int tid[NUM_THREADS];
    pthread_t worker_threads[NUM_THREADS-1];
    
-
-#ifndef DEBUG
-   srand48(time(NULL)); // randomize seed
+   printf("Number of Monte Carlo trials: %d\n", N);
+#ifdef DEBUG 
+   printf("Launching %d threads with %d trials each.\n",NUM_THREADS,TRIALS_PER_THREAD);
 #endif
+
    tid[0] = 0;
    for(i=1; i< NUM_THREADS; i++) {
      tid[i] = i;

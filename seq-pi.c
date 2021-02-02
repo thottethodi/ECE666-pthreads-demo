@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <time.h>
 
 //#define DEBUG
@@ -18,7 +17,10 @@ int trial() {
    double x, y, dist;
    x = drand48();
    y = drand48();
-   dist = sqrt(x*x+y*y);
+   dist = x*x+y*y; //sqrt is unnecessary because we don't actually need the distance.
+                   // We only need to know whether distance is less than one.
+                   // It turns out that if dist < 1.0 ==> dist^2 < 1.0
+                   // As such, we don't need it.
 
 #ifdef DEBUG
    printf("Point (%5.3f,%5.3f) is %5.3f away from the origin.\n", x, y, dist);
